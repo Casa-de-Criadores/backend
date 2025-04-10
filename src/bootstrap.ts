@@ -7,10 +7,10 @@ export const bootstrap = async () => {
   const application = new DanetApplication();
   await application.init(AppModule);
   const spec = new SpecBuilder()
-    .setTitle('Todo')
-    .setDescription('The todo API')
-    .setVersion('1.0')
-    .build();
+      .setTitle('CDC-Marketplace')
+      .setDescription('The backend')
+      .setVersion('0.1-clown-alpha')
+      .build();
   const document = await SwaggerModule.createDocument(application, spec);
   await SwaggerModule.setup('api', application, document);
   application.addGlobalMiddlewares(loggerMiddleware);
