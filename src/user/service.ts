@@ -1,34 +1,35 @@
-import { Inject, Injectable } from '@danet/core';
-import { Todo } from './class.ts';
-import type { Repository } from '../database/repository.ts';
-import { USER_REPOSITORY } from './constant.ts';
+import { Injectable } from '@danet/core';
+import { User } from './class.ts';
 
 @Injectable()
-export class TodoService {
-  constructor(@Inject(USER_REPOSITORY) private repository: Repository<Todo>) {
+export class UserService {
+  private users: User[] = [];
+
+  getAll(): User[] {
+    return this.users;
   }
 
-  getAll() {
-    return this.repository.getAll();
+  getById(id: string): User | undefined {
+    return this.users.find(user => user.id === id);
   }
 
-  getById(id: string) {
-    return this.repository.getById(id);
+  create(user: User): User {
+    user.id = crypto.randomUUID(); // swap this for ULID later
+    this.users.push(user);
+    return user;
   }
 
-  async create(todo: Omit<Todo, '_id'>) {
-    return this.repository.create(todo);
+  update(id: string, user: Partial<User>): User | undefined {
+    const index = this.users.findIndex(u => u.id === id);
+    if (index === -1) return undefined;
+    this.users[index] = { ...this.users[index], ...user };
+    return this.users[index];
   }
 
-  update(todoId: string, todo: Todo) {
-    return this.repository.updateOne(todoId, todo);
-  }
-
-  async deleteOneById(todoId: string) {
-    await this.repository.deleteOne(todoId);
-  }
-
-  deleteAll() {
-    return this.repository.deleteAll();
+  deleteOneById(id: string): boolean {
+    const index = this.users.findIndex(u => u.id === id);
+    if (index === -1) return false;
+    this.users.splice(index, 1);
+    return true;
   }
 }

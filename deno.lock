@@ -21,6 +21,7 @@
     "jsr:@std/crypto@~0.220.1": "0.220.1",
     "jsr:@std/datetime@0.213.1": "0.213.1",
     "jsr:@std/dotenv@0.225.2": "0.225.2",
+    "jsr:@std/dotenv@~0.225.3": "0.225.3",
     "jsr:@std/encoding@0.213.1": "0.213.1",
     "jsr:@std/encoding@~0.220.1": "0.220.1",
     "jsr:@std/fmt@0.213.1": "0.213.1",
@@ -126,6 +127,9 @@
     "@std/dotenv@0.225.2": {
       "integrity": "e2025dce4de6c7bca21dece8baddd4262b09d5187217e231b033e088e0c4dd23"
     },
+    "@std/dotenv@0.225.3": {
+      "integrity": "a95e5b812c27b0854c52acbae215856d9cce9d4bbf774d938c51d212711e8d4a"
+    },
     "@std/encoding@0.213.1": {
       "integrity": "fcbb6928713dde941a18ca5db88ca1544d0755ec8fb20fe61e2dc8144b390c62"
     },
@@ -203,5 +207,16 @@
     "wordwrap@1.0.0": {
       "integrity": "sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q=="
     }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@bartlomieju/postgres@*",
+      "jsr:@danet/core@2",
+      "jsr:@danet/swagger@2",
+      "jsr:@db/mongo@0.33.0",
+      "jsr:@std/assert@1.0.6",
+      "jsr:@std/dotenv@~0.225.3",
+      "jsr:@std/testing@1.0.3"
+    ]
   }
 }

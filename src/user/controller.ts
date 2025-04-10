@@ -1,38 +1,39 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@danet/core';
-import { Todo } from './class.ts';
-import { TodoService } from './service.ts';
 import { ReturnedType } from '@danet/swagger/decorators';
+import { UserService } from './service.ts';
+import { UserPublicDto } from './dto/userPublic.dto.ts';
+import {User} from "./class.ts";
 
-@Controller('todo')
-export class TodoController {
-  constructor(public todoService: TodoService) {
-  }
+@Controller('user')
+export class UserController {
+  constructor(public userService: UserService) {}
 
-  @ReturnedType(Todo, true)
+  @ReturnedType(UserPublicDto, true)
   @Get()
-  async getAllTodo() {
-    return this.todoService.getAll();
+  getAllUsers() {
+    return this.userService.getAll();
   }
 
-  @ReturnedType(Todo)
+  @ReturnedType(UserPublicDto, true)
   @Get(':id')
-  async getTodoById(@Param('id') todoId: string) {
-    return this.todoService.getById(todoId);
+  getUserById(@Param('id') userId: string) {
+    return this.userService.getById(userId);
   }
 
-  @ReturnedType(Todo)
+  @ReturnedType(UserPublicDto, true)
   @Post()
-  async createTodo(@Body() todo: Todo) {
-    return this.todoService.create(todo);
+  createUser(@Body() user: User) {
+    return this.userService.create(user);
   }
 
+  @ReturnedType(UserPublicDto, true)
   @Put(':id')
-  async updateTodo(@Param('id') todoId: string, @Body() todo: Todo) {
-    return this.todoService.update(todoId, todo);
+  updateUser(@Param('id') userId: string, @Body() user: Partial<User>) {
+    return this.userService.update(userId, user);
   }
 
   @Delete(':id')
-  async deleteOne(@Param('id') todoId: string) {
-    return this.todoService.deleteOneById(todoId);
+  deleteUser(@Param('id') userId: string) {
+    return this.userService.deleteOneById(userId);
   }
 }
