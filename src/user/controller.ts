@@ -1,29 +1,39 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@danet/core';
-import { ReturnedType } from '@danet/swagger/decorators';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuard } from '@danet/core';
+import { ReturnedType, UseGuards } from '@danet/swagger/decorators';
 import { UserService } from './service.ts';
-import { UserPublicDto, CreateUserDto, UpdateUserDto, createUserSchema, updateUserSchema} from './dto/public.dto.ts';
-import { resetPasswordSchema } from './dto/resetPassword.dto.ts';
+import { UserPublicDto, CreateUserDto, UpdateUserDto, DeleteUserDto, createUserSchema, updateUserSchema} from './dto/public.dto.ts';
+import { ResetPasswordDto, resetPasswordSchema } from './dto/resetPassword.dto.ts';
 import { CustomException, HttpStatus } from '../utils.ts';
+import { RoleGuard } from '../shared/guards/roles.guard.ts';
+import { Roles } from '../shared/decorators/roles.decorator.ts';
 
 
 @Controller('user')
 export class UserController {
   constructor(public userService: UserService) {}
 
+
   @ReturnedType(UserPublicDto, true)
   @Get()
+  @Roles('admin', 'super')
+  @UseGuard(RoleGuard)
   getAllUsers() {
+    console.log('[CONTROLLER] getAllUsers triggered');
     return this.userService.getAll();
   }
 
-  @ReturnedType(UserPublicDto, true)
+  @ReturnedType(UserPublicDto)
   @Get(':id')
+  @Roles('admin', 'super')
+  @UseGuard(RoleGuard)
   getUserById(@Param('id') userId: string) {
     return this.userService.getById(userId);
   }
 
-  @ReturnedType(UserPublicDto, true)
+  @ReturnedType(UserPublicDto)
   @Post()
+  @Roles('admin', 'super')
+  @UseGuard(RoleGuard)
   async createUser(@Body() raw: unknown): Promise<UserPublicDto> {
     const result = createUserSchema.safeParse(raw);
     if (!result.success) {
@@ -33,8 +43,10 @@ export class UserController {
     return await this.userService.create(dto);
   }
 
-  @ReturnedType(UserPublicDto, true)
+  @ReturnedType(UserPublicDto)
   @Put(':id')
+  @Roles('admin', 'super')
+  @UseGuard(RoleGuard)
   updateUser(@Param('id') userId: string, @Body() raw: unknown): UserPublicDto {
     const result = updateUserSchema.safeParse(raw);
 
@@ -46,21 +58,26 @@ export class UserController {
     return this.userService.update(userId, dto);
   }
 
-  @ReturnedType(UserPublicDto, true)
+  @ReturnedType(UserPublicDto)
   @Put(':id/password')
+  @Roles('admin', 'super', 'brand', 'customer')
+  @UseGuard(RoleGuard)
   async resetPassword(
       @Param('id') userId: string,
-      @Body() raw: unknown
+      @Body() dto: ResetPasswordDto
   ): Promise<UserPublicDto> {
-    const result = resetPasswordSchema.safeParse(raw);
+    const result = resetPasswordSchema.safeParse(dto);
     if (!result.success) {
       throw new CustomException(result.error.flatten(), HttpStatus.BAD_REQUEST);
     }
-
-    return await this.userService.updatePassword(userId, result.data.password);
+    return await this.userService.updatePassword(userId, result.data);
   }
 
+
+  @ReturnedType(DeleteUserDto)
   @Delete(':id')
+  @Roles('admin', 'super')
+  @UseGuard(RoleGuard)
   deleteUser(@Param('id') userId: string) {
     this.userService.deleteOneById(userId);
     return {

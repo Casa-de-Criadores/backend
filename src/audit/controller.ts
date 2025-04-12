@@ -8,19 +8,19 @@ export class TodoController {
   constructor(public todoService: TodoService) {
   }
 
-  @ReturnedType(Todo, true)
+  @ReturnedType([Todo])
   @Get()
   async getAllTodo() {
     return this.todoService.getAll();
   }
 
-  @ReturnedType(Todo)
+  @ReturnedType([Todo])
   @Get(':id')
   async getTodoById(@Param('id') todoId: string) {
     return this.todoService.getById(todoId);
   }
 
-  @ReturnedType(Todo)
+  @ReturnedType([Todo])
   @Post()
   async createTodo(@Body() todo: Todo) {
     return this.todoService.create(todo);

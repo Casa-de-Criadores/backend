@@ -4,6 +4,7 @@ export const HttpStatus = {
     NOT_FOUND: { code: 404, name: 'Not Found' },
     BAD_REQUEST: { code: 400, name: 'Bad Request' },
     FORBIDDEN: { code: 403, name: 'Forbidden' },
+    UNAUTHORIZED: { code: 401, name: 'Unauthorized' },
     INTERNAL_SERVER_ERROR: { code: 500, name: 'Internal Server Error' },
 };
 
@@ -12,7 +13,7 @@ export class CustomException extends Error {
 
     constructor(message: string, status: { code: number; name: string }) {
         super(message);
-        this.name = 'Error Message: ' + message;
+        this.name = message;
         this.status = status;
     }
 }

@@ -20,10 +20,17 @@ export class CreateUserDto {
 
 export class UserPublicDto {
     constructor(
-        public id: string,
-        public login: string,
-        public email: string,
-        public role: UserRole,
+        public id?: string,
+        public login?: string,
+        public email?: string,
+        public role?: UserRole
+    ) {}
+}
+
+export class DeleteUserDto {
+    constructor(
+        public success: boolean,
+        public message: string,
     ) {}
 }
 
