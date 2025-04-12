@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuard } from '@danet/core';
-import { ReturnedType, UseGuards } from '@danet/swagger/decorators';
+import { ReturnedType } from '@danet/swagger/decorators';
 import { UserService } from './service.ts';
 import { UserPublicDto, CreateUserDto, UpdateUserDto, DeleteUserDto, createUserSchema, updateUserSchema} from './dto/public.dto.ts';
 import { ResetPasswordDto, resetPasswordSchema } from './dto/resetPassword.dto.ts';
