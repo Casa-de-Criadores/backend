@@ -1,5 +1,4 @@
-// shared/middleware/auth.middleware.ts
-import { Injectable, Middleware } from '@danet/core';
+import { Injectable } from '@danet/core';
 
 @Injectable()
 export class AuthMiddleware implements DanetMiddleware {
