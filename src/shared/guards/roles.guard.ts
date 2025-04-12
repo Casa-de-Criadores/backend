@@ -2,7 +2,6 @@ import {
     Injectable,
     AuthGuard,
     ExecutionContext,
-    HttpContext,
 } from '@danet/core';
 import { CustomException, HttpStatus } from '../../utils.ts'
 
