@@ -1,4 +1,5 @@
 import { Catch, ExceptionFilter, HttpContext, Injectable } from '@danet/core';
+import { ZodError } from "zod";
 
 export const HttpStatus = {
     NOT_FOUND: { code: 404, name: 'Not Found' },
@@ -38,4 +39,9 @@ export class CustomExceptionFilter implements ExceptionFilter {
             headers: { 'Content-Type': 'application/json' },
         });
     }
+}
+
+export function getZodMessage(error: ZodError): string {
+    const { formErrors, fieldErrors } = error.flatten();
+    return formErrors[0] ?? Object.values(fieldErrors).flat()[0] ?? 'Invalid input';
 }

@@ -2,7 +2,7 @@
 import { z } from "zod";
 
 export class ResetPasswordDto {
-    password: string;
+    password!: string;
 }
 
 export const resetPasswordSchema = z.object({
