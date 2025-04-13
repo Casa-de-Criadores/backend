@@ -1,10 +1,7 @@
-import { Module, TokenInjector } from '@danet/core';
-import { PostgresService } from "./postgres.service.ts";
-
-export const DATABASE = 'DATABASE';
+import { Module } from '@danet/core';
+import { DbClient } from './client.ts';
 
 @Module({
-  imports: [],
-  injectables: [new TokenInjector(PostgresService, DATABASE)], // change PostgresService by any service using other database engine if needed.
+  injectables: [DbClient],
 })
 export class DatabaseModule {}
