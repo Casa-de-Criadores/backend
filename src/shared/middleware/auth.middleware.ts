@@ -1,4 +1,9 @@
-import { Injectable } from '@danet/core';
+import {
+    Injectable,
+    DanetMiddleware,
+    HttpContext,
+    NextFunction
+} from '@danet/core';
 
 @Injectable()
 export class AuthMiddleware implements DanetMiddleware {

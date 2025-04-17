@@ -1,4 +1,9 @@
+import '@std/dotenv/load';
 import { bootstrap } from './src/bootstrap.ts';
 
-const application = await bootstrap();
-await application.listen(Number(Deno.env.get('PORT') || 48128));
+if (import.meta.main) {
+    bootstrap().catch(err => {
+        console.error(err);
+        Deno.exit(1);
+    });
+}

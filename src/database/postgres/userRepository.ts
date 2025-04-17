@@ -21,17 +21,17 @@ export class UserRepository {
 
     // Create a new user. This assumes your user model has the following fields:
     // login, email, password, role. Adjust accordingly if needed.
-    async create(userData: { login: string; email: string; password: string; role: string }): Promise<User> {
+    async create(userData: { login: string; email: string; passwordHash: string; role: string }): Promise<User> {
         const id = ulid();
         const sql = "INSERT INTO users (id, login, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING *";
-        const rows = await this.db.query(sql, [id, userData.login, userData.email, userData.password, userData.role]);
+        const rows = await this.db.query(sql, [id, userData.login, userData.email, userData.passwordHash, userData.role]);
         return new User(rows[0]);
     }
 
     // Update an existing user. We dynamically build the update clause based on provided fields.
     async update(
         userId: string,
-        userData: Partial<{ login: string; email: string; password: string; role: string }>
+        userData: Partial<{ login: string; email: string; passwordHash: string; role: string }>
     ): Promise<User> {
         const keys = Object.keys(userData);
         if (keys.length === 0) {

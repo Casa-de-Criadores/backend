@@ -2,9 +2,9 @@
 import { z } from "zod";
 
 export class ResetPasswordDto {
-    password!: string;
+    passwordHash!: string;
 }
 
 export const resetPasswordSchema = z.object({
-    password: z.string().min(8),
+    passwordHash: z.string().min(8),
 });

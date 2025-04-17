@@ -3,10 +3,9 @@ import { ReturnedType } from '@danet/swagger/decorators';
 import { UserService } from './service.ts';
 import { UserPublicDto, CreateUserDto, UpdateUserDto, DeleteUserDto, createUserSchema, updateUserSchema} from './dto/public.dto.ts';
 import { ResetPasswordDto, resetPasswordSchema } from './dto/resetPassword.dto.ts';
-import {CustomException, getZodMessage, HttpStatus} from '../utils.ts';
+import {CustomException, getZodMessage, HttpStatus} from '../shared/exception.filter.ts';
 import { RoleGuard } from '../shared/guards/roles.guard.ts';
 import { Roles } from '../shared/decorators/roles.decorator.ts';
-
 
 @Controller('user')
 export class UserController {
@@ -37,7 +36,7 @@ export class UserController {
   async createUser(@Body() raw: unknown): Promise<UserPublicDto> {
     const result = createUserSchema.safeParse(raw);
     if (!result.success) {
-      throw new CustomException(getZodMessage(result.error), HttpStatus.BAD_REQUEST);
+      throw new CustomException(HttpStatus.BAD_REQUEST, getZodMessage(result.error));
     }
     const dto: CreateUserDto = result.data;
     return await this.userService.create(dto);
@@ -51,7 +50,7 @@ export class UserController {
     const result = updateUserSchema.safeParse(raw);
 
     if (!result.success) {
-      throw new CustomException(getZodMessage(result.error), HttpStatus.BAD_REQUEST);
+      throw new CustomException(HttpStatus.BAD_REQUEST, getZodMessage(result.error));
     }
 
     const dto: UpdateUserDto = result.data;
@@ -69,10 +68,10 @@ export class UserController {
     const result = resetPasswordSchema.safeParse(dto);
 
     if (!result.success) {
-      throw new CustomException(getZodMessage(result.error), HttpStatus.BAD_REQUEST);
+      throw new CustomException(HttpStatus.BAD_REQUEST, getZodMessage(result.error));
     }
 
-    return await this.userService.updatePassword(userId, result.data.password);
+    return await this.userService.updatePassword(userId, result.data.passwordHash);
   }
 
 

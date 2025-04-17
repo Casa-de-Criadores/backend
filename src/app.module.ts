@@ -1,19 +1,17 @@
-import { Module, Injectable} from '@danet/core';
+import {Injectable, Module} from '@danet/core';
 import {AppController} from './app.controller.ts';
-import { UserController } from './user/controller.ts';
 import {UserModule} from "./user/module.ts";
-import {CustomExceptionFilter} from "./utils.ts";
 import {RoleGuard} from "./shared/guards/roles.guard.ts";
+import {ProductModule} from "./product/module.ts";
+import {AuthModule} from "./auth/module.ts";
+import {CustomExceptionFilter} from "./shared/exception.filter.ts";
 
 @Injectable()
 class GlobalRoleGuard extends RoleGuard {}
 
-@Injectable()
-class GlobalExceptionFilter extends CustomExceptionFilter {}
-
 @Module({
-    controllers: [AppController, UserController],
-    imports: [UserModule],
-    injectables: [GlobalRoleGuard, GlobalExceptionFilter],
+  controllers: [AppController],
+  imports: [AuthModule, UserModule, ProductModule],
+  injectables: [GlobalRoleGuard, CustomExceptionFilter],
 })
 export class AppModule {}

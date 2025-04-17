@@ -15,7 +15,7 @@ export class CreateUserDto {
     constructor(
         public login: string,
         public email: string,
-        public password: string,
+        public passwordHash: string,
         public role: UserRole
     ) {}
 }
@@ -37,7 +37,7 @@ export class DeleteUserDto {
 const userShape = {
     login: z.string().min(3, { message: 'Login must be at least 3 characters' }),
     email: z.string().email({ message: 'Invalid email format' }),
-    password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+    passwordHash: z.string().min(8, { message: 'Password must be at least 8 characters' }),
     role: z.enum(['admin', 'customer', 'brand'], { message: 'Invalid role' }),
 };
 

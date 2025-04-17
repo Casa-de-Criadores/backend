@@ -1,9 +1,11 @@
+import { Reflect } from "https://deno.land/x/reflect_metadata@v0.1.12/mod.ts";
 import {
     Injectable,
     AuthGuard,
     ExecutionContext,
 } from '@danet/core';
-import { CustomException, HttpStatus } from '../../utils.ts'
+import { CustomException, HttpStatus } from '../exception.filter.ts'
+
 
 @Injectable()
 export class RoleGuard implements AuthGuard {
@@ -18,8 +20,8 @@ export class RoleGuard implements AuthGuard {
 
         if (!user || !(roles.includes(user.role) || user.role === 'super')) {
             throw new CustomException(
-                'Unauthorized: Insufficient role or not logged in',
-                HttpStatus.UNAUTHORIZED
+                HttpStatus.UNAUTHORIZED,
+                'Unauthorized: Insufficient role or not logged in'
             );
         }
 

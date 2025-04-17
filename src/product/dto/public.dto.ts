@@ -1,7 +1,7 @@
 import {z} from 'zod';
-import {ProductImage, ProductImageInput, ProductImageSchema,} from '../class.ts';
+import {ProductImage, ProductImageSchema,} from '../class.ts';
 import {Product, ProductWithDetails} from '../models/models.ts';
-import {CustomException, getZodMessage, HttpStatus,} from '../../utils.ts';
+import {CustomException, getZodMessage, HttpStatus,} from '../../shared/exception.filter.ts';
 import {ulid} from 'ulidx';
 
 // === Zod Schemas ===
@@ -36,7 +36,7 @@ export class CreateProductDto {
     static validate(raw: unknown): CreateProductInput {
         const result = CreateProductSchema.safeParse(raw);
         if (!result.success) {
-            throw new CustomException(getZodMessage(result.error), HttpStatus.BAD_REQUEST);
+            throw new CustomException(HttpStatus.BAD_REQUEST, getZodMessage(result.error));
         }
         return result.data;
     }
@@ -69,7 +69,7 @@ export class UpdateProductDto {
     static validate(raw: unknown): UpdateProductInput {
         const result = UpdateProductSchema.safeParse(raw);
         if (!result.success) {
-            throw new CustomException(getZodMessage(result.error), HttpStatus.BAD_REQUEST);
+            throw new CustomException(HttpStatus.BAD_REQUEST, getZodMessage(result.error));
         }
         return result.data;
     }

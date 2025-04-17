@@ -1,10 +1,9 @@
 import {  Injectable } from '@danet/core';
 import {Product, ProductWithDetails} from './models/models.ts';
-import { CustomException, HttpStatus } from '../utils.ts';
+import { CustomException, HttpStatus } from '../shared/exception.filter.ts';
 import {ProductRepository} from "../database/postgres/productRepository.ts";
 import {TagRepository} from "../database/postgres/tagRepository.ts";
 import {CategoryRepository} from "../database/postgres/categoryRepository.ts";
-import {ProductWithDetailsDto} from "./dto/public.dto.ts";
 
 @Injectable()
 export class ProductService {
@@ -21,7 +20,7 @@ export class ProductService {
   async getById(id: string): Promise<Product> {
     const product = await this.productRepository.getById(id);
     if (!product) {
-      throw new CustomException('Product not found', HttpStatus.NOT_FOUND);
+      throw new CustomException(HttpStatus.NOT_FOUND, 'Product not found', );
     }
     return product;
   }
@@ -33,7 +32,7 @@ export class ProductService {
   async update(id: string, product: Product): Promise<Product> {
     const existing = this.productRepository.getById(id);
     if (!existing) {
-      throw new CustomException('Cannot update non-existent product', HttpStatus.NOT_FOUND);
+      throw new CustomException(HttpStatus.NOT_FOUND, 'Cannot update non-existent product' );
     }
     return this.productRepository.updateOne(id, product);
   }
@@ -41,7 +40,7 @@ export class ProductService {
   async delete(id: string): Promise<Product> {
     const product = await this.productRepository.getById(id);
     if (!product) {
-      throw new CustomException('Cannot delete non-existent product', HttpStatus.NOT_FOUND);
+      throw new CustomException(HttpStatus.NOT_FOUND, 'Cannot delete non-existent product');
     }
     await this.productRepository.deleteOne(id);
     return product;
@@ -51,21 +50,19 @@ export class ProductService {
     await this.productRepository.deleteAll();
   }
 
-  async getProductWithDetails(productId: string): Promise<ProductWithDetailsDto> {
-    // Retrieve the basic product object.
-    const product = await this.productRepository.getById(productId);
-    if (!product) {
-      throw new CustomException('Product not found', HttpStatus.NOT_FOUND);
+  async getProductWithDetails(id: string): Promise<ProductWithDetails> {
+    const product = await this.getById(id);
+
+    const category = await this.categoryRepository.getById(product.categoryId);
+    if (!category) {
+      throw new CustomException(
+          HttpStatus.NOT_FOUND,
+          `Category ${product.categoryId} for product ${id} not found`
+      );
     }
 
-    // Hydrate category and tags.
-    const category = await this.categoryRepository.getById(product.categoryId);
-    const tags = await this.tagRepository.getByIds(product.tagIds);
-
-    // Create the enriched domain model.
-    const productWithDetails = new ProductWithDetails(product, category, tags);
-
-    // Transform the enriched model into its DTO for presentation.
-    return ProductWithDetailsDto.from(productWithDetails);
+    const tags = await this.tagRepository.getByIds(product.tagIds || []);
+    // now TS knows `cat` is definitely a ProductCategory
+    return new ProductWithDetails(product, category, tags);
   }
 }

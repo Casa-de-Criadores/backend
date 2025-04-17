@@ -5,12 +5,14 @@ export class ProductCategory {
   name: Record<string, string>;
   icon?: string;
   order?: number;
+  slug?: Record<string, string>;
 
-  constructor({ id, name, icon, order }: ProductCategory) {
+  constructor({ id, name, icon, order, slug }: ProductCategory) {
     this.id = id;
     this.name = name;
     this.icon = icon;
     this.order = order;
+    this.slug = slug;
   }
 }
 
@@ -19,12 +21,14 @@ export class ProductTag {
   name: Record<string, string>;
   color?: string;
   description?: Record<string, string>;
+  slug?: Record<string, string>
 
-  constructor({ id, name, color, description }: ProductTag) {
+  constructor({ id, name, color, description, slug }: ProductTag) {
     this.id = id;
     this.name = name;
     this.color = color;
     this.description = description;
+    this.slug = slug;
   }
 }
 

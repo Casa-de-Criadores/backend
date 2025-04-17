@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Post, Put, UseGuard,} from '@danet/core';
+import {Body, Controller, Delete, Get, Param, Post, Put, UseGuard} from '@danet/core';
 import {ReturnedType} from '@danet/swagger/decorators';
 import {Roles} from '../shared/decorators/roles.decorator.ts';
 import {RoleGuard} from '../shared/guards/roles.guard.ts';
@@ -11,7 +11,7 @@ import {
     UpdateProductDto,
     UpdateProductSchema,
 } from './dto/public.dto.ts';
-import {CustomException, getZodMessage, HttpStatus} from "../utils.ts";
+import {CustomException, getZodMessage, HttpStatus} from "../shared/exception.filter.ts";
 
 @Controller('product')
 export class ProductController {
@@ -37,7 +37,8 @@ export class ProductController {
   @Get(':id/details')
   @ReturnedType(ProductWithDetailsDto)
   async getDetails(@Param('id') id: string): Promise<ProductWithDetailsDto> {
-    return await this.productService.getProductWithDetails(id);
+    const domain = await this.productService.getProductWithDetails(id);
+    return ProductWithDetailsDto.from(domain);
   }
 
   // Route to create a product: validates incoming data via Zod + DTO logic
@@ -49,8 +50,8 @@ export class ProductController {
     const result = CreateProductSchema.safeParse(raw);
     if (!result.success) {
       throw new CustomException(
-        getZodMessage(result.error),
         HttpStatus.BAD_REQUEST,
+        getZodMessage(result.error),
       );
     }
     // result.data is of type CreateProductInput
@@ -72,8 +73,8 @@ export class ProductController {
     const result = UpdateProductSchema.safeParse(raw);
     if (!result.success) {
       throw new CustomException(
-        getZodMessage(result.error),
         HttpStatus.BAD_REQUEST,
+        getZodMessage(result.error),
       );
     }
     // result.data is of type UpdateProductInput
