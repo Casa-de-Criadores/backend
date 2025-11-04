@@ -2,11 +2,11 @@ import '@std/dotenv/load';
 import { AppModule } from './app.module.ts';
 import { DanetApplication } from '@danet/core';
 import { loggerMiddleware } from './logger.middleware.ts';
-import { AuthMiddleware } from './shared/middleware/auth.middleware.ts'
+import { AuthMiddleware } from './shared/middleware/auth.middleware.ts';
 import { SpecBuilder, SwaggerModule } from '@danet/swagger';
-import {MigrationService} from "./database/migrations.service.ts";
-import {DbClient} from "./database/client.ts";
-import {CustomExceptionFilter} from "./shared/exception.filter.ts";
+import { MigrationService } from './database/migrations.service.ts';
+import { DbClient } from './database/client.ts';
+import { CustomExceptionFilter } from './shared/exception.filter.ts';
 
 /**
  * createApp():
@@ -26,8 +26,8 @@ export async function createApp(): Promise<DanetApplication> {
 
   // 2) Middleware pipeline
   app.addGlobalMiddlewares(
-      AuthMiddleware,    // inject ctx.user
-      loggerMiddleware,  // log requests
+    AuthMiddleware, // inject ctx.user
+    loggerMiddleware, // log requests
   );
 
   return app;
@@ -49,10 +49,10 @@ export async function bootstrap(): Promise<void> {
 
   // swagger/OpenAPI at /api
   const spec = new SpecBuilder()
-      .setTitle('CDC‑Marketplace')
-      .setDescription('The backend API')
-      .setVersion('0.1‑clown‑alpha')
-      .build();
+    .setTitle('CDC‑Marketplace')
+    .setDescription('The backend API')
+    .setVersion('0.1‑clown‑alpha')
+    .build();
   const document = await SwaggerModule.createDocument(app, spec);
   await SwaggerModule.setup('api', app, document);
   console.log('[BOOTSTRAP] Swagger UI available at /api');
@@ -64,7 +64,7 @@ export async function bootstrap(): Promise<void> {
 }
 
 if (import.meta.main) {
-  bootstrap().catch(err => {
+  bootstrap().catch((err) => {
     console.error(err);
     Deno.exit(1);
   });

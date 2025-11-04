@@ -9,7 +9,7 @@ export class TodoController {
   }
 
   @ReturnedType([Todo])
-  @Get()
+  @Get('')
   async getAllTodo() {
     return this.todoService.getAll();
   }
@@ -21,7 +21,7 @@ export class TodoController {
   }
 
   @ReturnedType([Todo])
-  @Post()
+  @Post('')
   async createTodo(@Body() todo: Todo) {
     return this.todoService.create(todo);
   }

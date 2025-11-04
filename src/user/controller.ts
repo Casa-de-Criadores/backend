@@ -1,9 +1,32 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuard } from '@danet/core';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuard,
+} from '@danet/core';
 import { ReturnedType } from '@danet/swagger/decorators';
 import { UserService } from './service.ts';
-import { UserPublicDto, CreateUserDto, UpdateUserDto, DeleteUserDto, createUserSchema, updateUserSchema} from './dto/public.dto.ts';
-import { ResetPasswordDto, resetPasswordSchema } from './dto/resetPassword.dto.ts';
-import {CustomException, getZodMessage, HttpStatus} from '../shared/exception.filter.ts';
+import {
+  CreateUserDto,
+  createUserSchema,
+  DeleteUserDto,
+  UpdateUserDto,
+  updateUserSchema,
+  UserPublicDto,
+} from './dto/public.dto.ts';
+import {
+  ResetPasswordDto,
+  resetPasswordSchema,
+} from './dto/resetPassword.dto.ts';
+import {
+  CustomException,
+  getZodMessage,
+  HttpStatus,
+} from '../shared/exception.filter.ts';
 import { RoleGuard } from '../shared/guards/roles.guard.ts';
 import { Roles } from '../shared/decorators/roles.decorator.ts';
 
@@ -11,9 +34,8 @@ import { Roles } from '../shared/decorators/roles.decorator.ts';
 export class UserController {
   constructor(public userService: UserService) {}
 
-
   @ReturnedType(UserPublicDto, true)
-  @Get()
+  @Get('')
   @Roles('admin', 'super')
   @UseGuard(RoleGuard)
   getAllUsers() {
@@ -30,13 +52,16 @@ export class UserController {
   }
 
   @ReturnedType(UserPublicDto)
-  @Post()
+  @Post('')
   @Roles('admin', 'super')
   @UseGuard(RoleGuard)
   async createUser(@Body() raw: unknown): Promise<UserPublicDto> {
     const result = createUserSchema.safeParse(raw);
     if (!result.success) {
-      throw new CustomException(HttpStatus.BAD_REQUEST, getZodMessage(result.error));
+      throw new CustomException(
+        HttpStatus.BAD_REQUEST,
+        getZodMessage(result.error),
+      );
     }
     const dto: CreateUserDto = result.data;
     return await this.userService.create(dto);
@@ -46,34 +71,45 @@ export class UserController {
   @Put(':id')
   @Roles('admin', 'super')
   @UseGuard(RoleGuard)
-  updateUser(@Param('id') userId: string, @Body() raw: unknown): UserPublicDto {
+  async updateUser(
+    @Param('id') userId: string,
+    @Body() raw: unknown,
+  ): Promise<UserPublicDto> {
     const result = updateUserSchema.safeParse(raw);
 
     if (!result.success) {
-      throw new CustomException(HttpStatus.BAD_REQUEST, getZodMessage(result.error));
+      throw new CustomException(
+        HttpStatus.BAD_REQUEST,
+        getZodMessage(result.error),
+      );
     }
 
     const dto: UpdateUserDto = result.data;
-    return this.userService.update(userId, dto);
+    return await this.userService.update(userId, dto);
   }
 
   @ReturnedType(UserPublicDto)
-  @Put(':id/password')
+  @Put(':id/resetPassword')
   @Roles('admin', 'super', 'brand', 'customer')
   @UseGuard(RoleGuard)
   async resetPassword(
-      @Param('id') userId: string,
-      @Body() dto: ResetPasswordDto
+    @Param('id') userId: string,
+    @Body() dto: ResetPasswordDto,
   ): Promise<UserPublicDto> {
     const result = resetPasswordSchema.safeParse(dto);
 
     if (!result.success) {
-      throw new CustomException(HttpStatus.BAD_REQUEST, getZodMessage(result.error));
+      throw new CustomException(
+        HttpStatus.BAD_REQUEST,
+        getZodMessage(result.error),
+      );
     }
 
-    return await this.userService.updatePassword(userId, result.data.passwordHash);
+    return await this.userService.updatePassword(
+      userId,
+      result.data.passwordHash,
+    );
   }
-
 
   @ReturnedType(DeleteUserDto)
   @Delete(':id')

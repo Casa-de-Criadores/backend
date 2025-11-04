@@ -1,9 +1,7 @@
 {
   "lint": {
     "rules": {
-      "exclude": [
-        "require-await"
-      ]
+      "exclude": ["require-await"]
     }
   },
   "fmt": {
@@ -13,10 +11,16 @@
   },
   "compilerOptions": {
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "lib": ["deno.ns", "deno.window", "esnext", "es2020"],
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler"
   },
   "imports": {
-    "@danet/core": "jsr:@danet/core@2",
+    "@danet/core": "jsr:@danet/core",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.3",
     "@db/mongo": "jsr:@db/mongo@0.33.0",
     "@bartlomieju/postgres": "jsr:@bartlomieju/postgres",
@@ -25,10 +29,12 @@
     "@std/testing": "jsr:@std/testing@1.0.3",
     "reflect-metadata": "npm:reflect-metadata@^0.2.2",
     "ulidx": "npm:ulidx@^2.4.1",
-    "zod": "npm:zod@^3.24.2"
+    "zod": "npm:zod@^3.24.2",
+    "djwt": "https://deno.land/x/djwt@v2.8/mod.ts",
+    "postgres": "https://deno.land/x/postgres@v0.17.0/mod.ts"
   },
   "tasks": {
     "launch-server": "deno run --allow-net --allow-read --allow-env --unstable-net run.ts",
-    "test": "deno test -A --unstable spec"
+    "test": "deno test --allow-net --allow-read --allow-env ./src/tests/**/*.spec.ts"
   }
 }

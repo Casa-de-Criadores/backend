@@ -1,57 +1,116 @@
 // src/database/postgres/userRepository.ts
-import { DbClient } from "../client.ts";
-import { ulid } from "ulidx";
-import { User } from "../../user/models/models.ts";
+import { Injectable } from '@danet/core';
+import { DbClient } from '../client.ts';
+import { ulid } from 'ulidx';
+import { User } from '../../user/models/models.ts';
+import { UserRole } from '../../user/constants.ts';
 
+@Injectable()
 export class UserRepository {
-    constructor(private readonly db: DbClient) {}
+  constructor(private readonly db: DbClient) {}
 
-    // Fetch all users from the database.
-    async getAll(): Promise<User[]> {
-        const rows = await this.db.query("SELECT * FROM users");
-        // Map each row from the DB to a new User instance.
-        return rows.map((row: any) => new User(row));
-    }
+  async getAll(): Promise<User[]> {
+    const rows = await this.db.query('SELECT * FROM users');
+    return rows.map((row: unknown) =>
+      this.mapRowToUser(row as Record<string, unknown>)
+    );
+  }
 
-    // Fetch a single user by ID.
-    async getById(userId: string): Promise<User | undefined> {
-        const row = await this.db.queryOne("SELECT * FROM users WHERE id = $1", [userId]);
-        return row ? new User(row) : undefined;
-    }
+  async getById(userId: string): Promise<User | undefined> {
+    const row = await this.db.queryOne('SELECT * FROM users WHERE id = $1', [
+      userId,
+    ]);
+    return row ? this.mapRowToUser(row as Record<string, unknown>) : undefined;
+  }
 
-    // Create a new user. This assumes your user model has the following fields:
-    // login, email, password, role. Adjust accordingly if needed.
-    async create(userData: { login: string; email: string; passwordHash: string; role: string }): Promise<User> {
-        const id = ulid();
-        const sql = "INSERT INTO users (id, login, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING *";
-        const rows = await this.db.query(sql, [id, userData.login, userData.email, userData.passwordHash, userData.role]);
-        return new User(rows[0]);
+  async create(
+    userData: {
+      login: string;
+      email: string;
+      passwordHash: string;
+      role: UserRole;
+    },
+  ): Promise<User> {
+    const id = crypto.randomUUID();
+    try {
+      const row = await this.db.queryOne(
+        `
+        INSERT INTO users (
+          id,
+          login,
+          email,
+          password_hash,
+          role
+        ) VALUES ($1, $2, $3, $4, $5::user_role)
+        RETURNING *
+      `,
+        [
+          id,
+          userData.login,
+          userData.email,
+          userData.passwordHash,
+          userData.role,
+        ],
+      );
+      return this.mapRowToUser(row as Record<string, unknown>);
+    } catch (error) {
+      console.error('Failed to create user:', error);
+      throw new Error('Failed to create user');
     }
+  }
 
-    // Update an existing user. We dynamically build the update clause based on provided fields.
-    async update(
-        userId: string,
-        userData: Partial<{ login: string; email: string; passwordHash: string; role: string }>
-    ): Promise<User> {
-        const keys = Object.keys(userData);
-        if (keys.length === 0) {
-            throw new Error("No fields provided to update");
-        }
-        const setClause = keys.map((key, index) => `"${key}" = $${index + 1}`).join(", ");
-        const values = keys.map(key => (userData as any)[key]);
-        values.push(userId);
-        const sql = `UPDATE users SET ${setClause} WHERE id = $${values.length} RETURNING *`;
-        const rows = await this.db.query(sql, values);
-        return new User(rows[0]);
+  async update(
+    userId: string,
+    userData: Partial<{
+      login: string;
+      email: string;
+      passwordHash: string;
+      role: UserRole;
+      isDisabled: boolean;
+    }>,
+  ): Promise<User> {
+    const keys = Object.keys(userData);
+    if (keys.length === 0) {
+      throw new Error('No fields provided to update');
     }
+    const setClause = keys.map((key, index) => {
+      const column = key === 'passwordHash'
+        ? 'password_hash'
+        : key === 'isDisabled'
+        ? 'is_disabled'
+        : key;
+      return `"${column}" = $${index + 1}`;
+    }).join(', ');
+    const values = keys.map((key) => userData[key as keyof typeof userData]);
+    values.push(userId);
+    const sql = `
+      UPDATE users
+      SET ${setClause}
+      WHERE id = $${values.length}
+      RETURNING *
+    `;
+    const row = await this.db.queryOne(sql, values);
+    return this.mapRowToUser(row as Record<string, unknown>);
+  }
 
-    // Delete a single user by ID.
-    async deleteOne(userId: string): Promise<void> {
-        await this.db.execute("DELETE FROM users WHERE id = $1", [userId]);
-    }
+  async deleteOne(userId: string): Promise<void> {
+    await this.db.execute('DELETE FROM users WHERE id = $1', [userId]);
+  }
 
-    // Delete all users (use with caution, clown).
-    async deleteAll(): Promise<void> {
-        await this.db.execute("DELETE FROM users");
-    }
+  async deleteAll(): Promise<void> {
+    await this.db.execute('DELETE FROM users');
+  }
+
+  private mapRowToUser(row: Record<string, unknown>): User {
+    return new User({
+      id: row.id as string,
+      login: row.login as string,
+      email: row.email as string,
+      passwordHash: row.password_hash as string,
+      role: row.role as UserRole,
+      createdAt: row.created_at as string,
+      lastLoginAt: row.last_login_at as string,
+      isDisabled: row.is_disabled as boolean,
+    });
+  }
 }

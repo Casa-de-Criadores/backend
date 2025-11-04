@@ -1,40 +1,61 @@
-import {Injectable} from '@danet/core';
-import {User as DbUser} from './class.ts';
-import {CreateUserDto, UpdateUserDto, UserPublicDto,} from './dto/public.dto.ts';
-import {CustomException, HttpStatus} from '../shared/exception.filter.ts';
+import { Injectable } from '@danet/core';
+import { User } from './models/models.ts';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UserPublicDto,
+} from './dto/public.dto.ts';
+import { CustomException, HttpStatus } from '../shared/exception.filter.ts';
+import { DbClient } from '../database/client.ts';
 
 @Injectable()
 export class UserService {
-  private users: DbUser[] = [];
+  constructor(private readonly dbClient: DbClient) {}
 
-  private async hashPassword(password: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  private mapDbRowToUser(row: Record<string, unknown>): User {
+    console.log('🎭 Mapping DB row to User:', row);
+    return new User({
+      id: row.id as string,
+      login: row.login as string,
+      email: row.email as string,
+      passwordHash: row.password_hash as string,
+      role: row.role as ('customer' | 'brand' | 'admin' | 'super'),
+      createdAt: row.created_at as string,
+      lastLoginAt: row.last_login_at as string,
+      isDisabled: row.is_disabled as boolean,
+    });
   }
 
-  getAll(): UserPublicDto[] {
-    return this.users.map((u) =>
-      new UserPublicDto(
-        u.id,
-        u.login,
-        u.email,
-        u.role,
-        u.isDisabled,
-      )
+  async getAll(): Promise<UserPublicDto[]> {
+    console.log('🎪 Fetching all users...');
+    const rows = await this.dbClient.query('SELECT * FROM users');
+    return rows.map((row) => {
+      const user = this.mapDbRowToUser(row as Record<string, unknown>);
+      return new UserPublicDto(
+        user.id,
+        user.login,
+        user.email,
+        user.role,
+        user.isDisabled,
+      );
+    });
+  }
+
+  async getById(id: string): Promise<UserPublicDto> {
+    console.log('🎭 Looking for user by ID:', id);
+    const row = await this.dbClient.queryOne(
+      'SELECT * FROM users WHERE id = $1',
+      [id],
     );
-  }
 
-  getById(id: string): UserPublicDto {
-    const user = this.users.find((u) => u.id === id);
-    if (!user) {
+    if (!row) {
       throw new CustomException(
         HttpStatus.NOT_FOUND,
         `User with id '${id}' not found in the clown database.`,
       );
     }
+
+    const user = this.mapDbRowToUser(row as Record<string, unknown>);
     return new UserPublicDto(
       user.id,
       user.login,
@@ -45,38 +66,79 @@ export class UserService {
   }
 
   async create(dto: CreateUserDto): Promise<UserPublicDto> {
-    const hashed = await this.hashPassword(dto.passwordHash);
-    const now = new Date().toISOString();
-    const dbUser: DbUser = {
-      id: crypto.randomUUID(),
-      login: dto.login,
-      email: dto.email,
-      passwordHash: hashed,
-      role: dto.role,
-      createdAt: now,
-      lastLoginAt: now,
-      isDisabled: false,
-    };
-    this.users.push(dbUser);
+    console.log('🎪 Creating new user:', dto.login);
+
+    const row = await this.dbClient.queryOne(
+      `
+      INSERT INTO users (
+        id,
+        login,
+        email,
+        password_hash,
+        role,
+        created_at,
+        last_login_at,
+        is_disabled
+      ) VALUES (
+        gen_random_uuid(),
+        $1, $2, $3, $4,
+        now(), now(),
+        false
+      ) RETURNING *`,
+      [dto.login, dto.email, dto.passwordHash, dto.role],
+    );
+
+    if (!row) {
+      throw new CustomException(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to create user',
+      );
+    }
+
+    const user = this.mapDbRowToUser(row as Record<string, unknown>);
     return new UserPublicDto(
-      dbUser.id,
-      dbUser.login,
-      dbUser.email,
-      dbUser.role,
-      dbUser.isDisabled,
+      user.id,
+      user.login,
+      user.email,
+      user.role,
+      user.isDisabled,
     );
   }
 
-  update(id: string, updateDto: UpdateUserDto): UserPublicDto {
-    const index = this.users.findIndex((u) => u.id === id);
-    if (index === -1) {
+  async update(id: string, updateDto: UpdateUserDto): Promise<UserPublicDto> {
+    const setValues: string[] = [];
+    const values: unknown[] = [];
+    let paramCount = 1;
+
+    Object.entries(updateDto).forEach(([key, value]) => {
+      if (value !== undefined) {
+        const dbKey = key.replace(
+          /[A-Z]/g,
+          (letter) => `_${letter.toLowerCase()}`,
+        );
+        setValues.push(`${dbKey} = $${paramCount}`);
+        values.push(value);
+        paramCount++;
+      }
+    });
+
+    values.push(id);
+    const row = await this.dbClient.queryOne(
+      `UPDATE users
+       SET ${setValues.join(', ')}, updated_at = now()
+       WHERE id = $${paramCount}
+       RETURNING *`,
+      values,
+    );
+
+    if (!row) {
       throw new CustomException(
         HttpStatus.NOT_FOUND,
         `Cannot update: user '${id}' vanished into thin air.`,
       );
     }
-    this.users[index] = { ...this.users[index], ...updateDto };
-    const user = this.users[index];
+
+    const user = this.mapDbRowToUser(row as Record<string, unknown>);
     return new UserPublicDto(
       user.id,
       user.login,
@@ -90,15 +152,22 @@ export class UserService {
     userId: string,
     newPassword: string,
   ): Promise<UserPublicDto> {
-    const index = this.users.findIndex((u) => u.id === userId);
-    if (index === -1) {
+    const row = await this.dbClient.queryOne(
+      `UPDATE users
+       SET password_hash = $1, updated_at = now()
+       WHERE id = $2
+       RETURNING *`,
+      [newPassword, userId],
+    );
+
+    if (!row) {
       throw new CustomException(
         HttpStatus.NOT_FOUND,
         `User '${userId}' not found. Can't reset.`,
       );
     }
-    this.users[index].passwordHash = await this.hashPassword(newPassword);
-    const user = this.users[index];
+
+    const user = this.mapDbRowToUser(row as Record<string, unknown>);
     return new UserPublicDto(
       user.id,
       user.login,
@@ -108,25 +177,37 @@ export class UserService {
     );
   }
 
-  deleteOneById(id: string): void {
-    const index = this.users.findIndex((u) => u.id === id);
-    if (index === -1) {
+  async deleteOneById(id: string): Promise<void> {
+    const row = await this.dbClient.queryOne(
+      'SELECT id FROM users WHERE id = $1',
+      [id],
+    );
+
+    if (!row) {
       throw new CustomException(
         HttpStatus.NOT_FOUND,
         `Cannot delete: user '${id}' never existed in the circus tent.`,
       );
     }
-    this.users.splice(index, 1);
+
+    await this.dbClient.execute(
+      'DELETE FROM users WHERE id = $1',
+      [id],
+    );
   }
 
-  getByLogin(login: string): DbUser {
-    const user = this.users.find((u) => u.login === login);
-    if (!user) {
-      throw new CustomException(
-        HttpStatus.NOT_FOUND,
-        `No clown by login '${login}' in the tent.`,
-      );
+  async getByLogin(login: string): Promise<User | null> {
+    console.log('🎭 Looking for user by login:', login);
+    const row = await this.dbClient.queryOne(
+        'SELECT * FROM users WHERE login = $1',
+        [login],
+    );
+
+    if (!row) {
+      console.log(`🤡 No user found for login '${login}'`);
+      return null;
     }
-    return user;
+
+    return this.mapDbRowToUser(row as Record<string, unknown>);
   }
 }
