@@ -18,7 +18,7 @@ export class DbClient {
         database: Deno.env.get('DB_NAME') || 'my_database',
         user: Deno.env.get('DB_USERNAME') || 'postgres',
         password: Deno.env.get('DB_PASSWORD') || 'supersecret',
-        port: Number(Deno.env.get('DB_PORT') || 48128),
+        port: Number(Deno.env.get('DB_PORT') || 5432),
       },
       DB_CONNECTIONS,
       true,
